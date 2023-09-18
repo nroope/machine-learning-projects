@@ -82,6 +82,6 @@ def create_model(input_shape):
 
 if __name__ == "__main__":
     model = create_model(test_input.shape[1:])
-    tf.keras.utils.plot_model(model, show_shapes=True, dpi=100, expand_nested=True, to_file="model.pdf")
+    tf.keras.utils.plot_model(model, show_shapes=True, dpi=100, expand_nested=True, to_file="yolov1.pdf")
     model.summary()
 

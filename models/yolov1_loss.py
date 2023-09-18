@@ -29,14 +29,14 @@ class YoloV1Loss(tf.keras.losses.Loss):
     def intersection_over_union(self, prediction_coordinates, label_coordinates):
         # predictions and label arrays = X, Y, W, H
         box_left_x = prediction_coordinates[:,:,:,0:1] - prediction_coordinates[:,:,:,2:3] / 2
-        box_right_x = prediction_coordinates[:,:,:,0:1] - prediction_coordinates[:,:,:,2:3] / 2
+        box_right_x = prediction_coordinates[:,:,:,0:1] + prediction_coordinates[:,:,:,2:3] / 2
         box_top_y = prediction_coordinates[:,:,:,1:2] - prediction_coordinates[:,:,:,3:4] / 2
-        box_bottom_y = prediction_coordinates[:,:,:,1:2] - prediction_coordinates[:,:,:,3:4] / 2
+        box_bottom_y = prediction_coordinates[:,:,:,1:2] + prediction_coordinates[:,:,:,3:4] / 2
 
         label_left_x = label_coordinates[:,:,:,0:1] - label_coordinates[:,:,:,2:3] / 2
-        label_right_x = label_coordinates[:,:,:,0:1] - label_coordinates[:,:,:,2:3] / 2
+        label_right_x = label_coordinates[:,:,:,0:1] + label_coordinates[:,:,:,2:3] / 2
         label_top_y = label_coordinates[:,:,:,1:2] - label_coordinates[:,:,:,3:4] / 2
-        label_bottom_y = label_coordinates[:,:,:,1:2] - label_coordinates[:,:,:,3:4] / 2
+        label_bottom_y = label_coordinates[:,:,:,1:2] + label_coordinates[:,:,:,3:4] / 2
 
         intersection_width = tf.clip_by_value(tf.math.minimum(box_right_x, label_right_x) - tf.math.maximum(box_left_x, label_left_x), 0, tf.float32.max)
         intersection_height = tf.clip_by_value(tf.math.minimum(box_bottom_y, label_bottom_y) - tf.math.maximum(box_top_y, label_top_y), 0, tf.float32.max)

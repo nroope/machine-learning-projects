@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from models.loss import YoloV1Loss
+from models.yolov1_loss import YoloV1Loss
 from models.yolov1 import create_model
 from dataloaders.yolov1_dataloader import YOLOV1DataLoader
 import os
