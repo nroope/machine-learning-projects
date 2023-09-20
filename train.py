@@ -40,6 +40,7 @@ def train(model, train_data, test_data, params):
     test_data_iterator = iter(test_data)
 
     for epoch in range(epochs):
+        print(f"Epoch {epoch+1}/{epochs}")
         for step, (x_train, y_train) in enumerate(train_data):
             with tf.GradientTape() as tape:
                 model_output = model(x_train, training=True)
