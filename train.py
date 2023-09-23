@@ -11,7 +11,6 @@ import mlflow
 
 
 
-
 def get_arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', default=16, type=int, help='Batch size used in training and validation')
@@ -39,33 +38,41 @@ def train(model, train_data, test_data, params):
     steps_per_epoch = len(train_data)
     test_data_iterator = iter(test_data)
 
+    @tf.function
+    def training_step(x_train, y_train):
+        with tf.GradientTape() as tape:
+            model_output = model(x_train, training=True)
+            loss_value = loss_fn(y_train, model_output)
+        grads = tape.gradient(loss_value, model.trainable_weights)
+        optimizer.apply_gradients(zip(grads, model.trainable_weights))
+        return loss_value
+
+
+    @tf.function
+    def validation_step(x_test, y_test):
+        model_output = model(x_test, training=False)
+        loss_value = loss_fn(y_test, model_output)
+        return loss_value
+
+    from datetime import datetime
+    start = datetime.now()
+    print("START", start)
     for epoch in range(epochs):
         print(f"Epoch {epoch+1}/{epochs}")
         for step, (x_train, y_train) in enumerate(train_data):
-            with tf.GradientTape() as tape:
-                model_output = model(x_train, training=True)
-                loss_value = loss_fn(y_train, model_output)
-                log_step = epoch*steps_per_epoch + step
-                if log_step % 10 == 0:
-                    log_metric("Training loss", loss_value, step=log_step)
-
-            grads = tape.gradient(loss_value, model.trainable_weights)
-            optimizer.apply_gradients(zip(grads, model.trainable_weights))
-
+            log_step = epoch*steps_per_epoch + step
+            loss_value = training_step(x_train, y_train)
+            if log_step % 10 == 0:
+                log_metric("Training loss", loss_value, step=log_step)
             if log_step % 50 == 0:
                 # Validate every 50 batches
                 x_test, y_test = next(test_data_iterator)
-                model_output = model(x_test, training=False)
-                loss_value = loss_fn(y_test, model_output)
-                
+                loss_value = validation_step(x_test, y_test)
                 log_metric("Validation loss", loss_value, step=log_step)
-                log_metric("Validation height and width loss", loss_fn.height_width_loss, step=log_step)
-                log_metric("Validation center-xy loss", loss_fn.center_xy_loss, step=log_step)
-                log_metric("Validation object loss", loss_fn.object_loss, step=log_step)
-                log_metric("Validation no-object loss 1", loss_fn.no_object_loss1, step=log_step)
-                log_metric("Validation no-object loss 2 ", loss_fn.no_object_loss2, step=log_step)
-                log_metric("Validation class loss", loss_fn.class_loss, step=log_step)
         train_data.shuffle()
+    end = datetime.now()
+    print("END", end)
+    print("Time taken", end-start)
 
 
 def main(params):
