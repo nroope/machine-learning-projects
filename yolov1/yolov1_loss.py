@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Flatten
 class YoloV1Loss(tf.keras.losses.Loss):
 
 
-    def __init__(self, cells, boxes, classes, coordinate_loss_weight, no_object_loss_weight):
+    def __init__(self, boxes=2, cells=7, classes=20, coordinate_loss_weight=None, no_object_loss_weight=None):
         self.cells = cells
         self.boxes = boxes
         self.classes = classes

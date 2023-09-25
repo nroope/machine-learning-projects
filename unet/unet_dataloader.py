@@ -30,17 +30,17 @@ def augment(img, mask):
 
 
 def get_datasets(batch_size):
-    dataset = tfds.load('oxford_iiit_pet:3.*.*')
+    dataset, info = tfds.load('oxford_iiit_pet:3.*.*', with_info=True)
     train = dataset['train'].map(read_and_preprocess, num_parallel_calls=tf.data.AUTOTUNE)
     test = dataset['test'].map(read_and_preprocess)
     train_dataset = train.cache().map(augment).shuffle(1000).batch(batch_size).repeat()
     train_dataset = train_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
     test_dataset = test.batch(batch_size)
-    return train_dataset, test_dataset
+    return train_dataset, test_dataset, info
 
 
 if __name__ == "__main__":
-    train_data, test_data = get_datasets(16)
+    train_data, test_data, info = get_datasets(16)
     train_data_iterator = iter(train_data)
     train_sample_input, train_sample_target = next(train_data_iterator)
     print(train_sample_input.shape, train_sample_target.shape)

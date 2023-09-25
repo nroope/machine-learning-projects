@@ -1,14 +1,12 @@
-import numpy as np
 import tensorflow as tf
-from models.yolov1_loss import YoloV1Loss
-from models.yolov1 import create_model, plot_output
-from dataloaders.yolov1_dataloader import YOLOV1DataLoader
+from yolov1_loss import YoloV1Loss
+from yolov1 import create_model, plot_output
+from yolov1_dataloader import YOLOV1DataLoader
 import os
 import pandas as pd
 import argparse
 from mlflow import log_metric, log_param, log_params, log_artifacts
 import mlflow
-
 
 
 def get_arg_parser():
@@ -27,12 +25,7 @@ def get_arg_parser():
 
 
 def train(model, train_data, test_data, params):
-    loss_fn = YoloV1Loss(boxes=2, 
-                         cells=7, 
-                         classes=20, 
-                         coordinate_loss_weight=params.coordinate_loss_weight, 
-                         no_object_loss_weight=params.no_object_loss_weight)
-    
+    loss_fn = YoloV1Loss(coordinate_loss_weight=params.coordinate_loss_weight, no_object_loss_weight=params.no_object_loss_weight)
     optimizer = tf.keras.optimizers.Adam(learning_rate=params.learning_rate)
     epochs = params.epochs
     steps_per_epoch = len(train_data)
@@ -62,6 +55,7 @@ def train(model, train_data, test_data, params):
         for step, (x_train, y_train) in enumerate(train_data):
             log_step = epoch*steps_per_epoch + step
             loss_value = training_step(x_train, y_train)
+
             if log_step % 10 == 0:
                 log_metric("Training loss", loss_value, step=log_step)
             if log_step % 50 == 0:
@@ -69,6 +63,7 @@ def train(model, train_data, test_data, params):
                 x_test, y_test = next(test_data_iterator)
                 loss_value = validation_step(x_test, y_test)
                 log_metric("Validation loss", loss_value, step=log_step)
+
         train_data.shuffle()
     end = datetime.now()
     print("END", end)
@@ -90,6 +85,7 @@ def main(params):
     test_df = pd.read_csv(os.path.join(params.data_path, "test.csv"), names=["image", "label_file"])
     test_data = YOLOV1DataLoader(test_df, params.batch_size, params.input_shape, params.data_path)
     model = create_model(input_shape=params.input_shape)
+
     with mlflow.start_run():
         log_params(params.__dict__)
         train(model, train_data, test_data, params)
