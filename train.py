@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from models.yolov1_loss import YoloV1Loss
-from models.yolov1 import create_model
+from models.yolov1 import create_model, plot_output
 from dataloaders.yolov1_dataloader import YOLOV1DataLoader
 import os
 import pandas as pd
@@ -73,6 +73,14 @@ def train(model, train_data, test_data, params):
     end = datetime.now()
     print("END", end)
     print("Time taken", end-start)
+    x_test, y_test = next(test_data_iterator)
+    model_output = model(x_test, training=False)
+    model_output = model_output.numpy()
+    x_test = x_test.numpy()
+
+    plot_output(x_test, model_output, params.model_type)
+
+
 
 
 def main(params):

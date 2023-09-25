@@ -1,3 +1,5 @@
 mlruns/
 venv/
 __pycache__/
+*.png
+*.ipynb

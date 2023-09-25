@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import os
 import sys
-
+import cv2
 
 class YOLOV1DataLoader(tf.keras.utils.Sequence):
     """
@@ -25,8 +25,8 @@ class YOLOV1DataLoader(tf.keras.utils.Sequence):
 
 
     def __get_image(self, file_id):
-        img = np.asarray(Image.open(file_id))
-        img = np.resize(img, self.image_shape)
+        img = cv2.imread(file_id)[:,:,::-1]
+        img = cv2.resize(img, dsize=self.image_shape[:2], interpolation=cv2.INTER_CUBIC)
         # Add batch dimension before returning
         return np.expand_dims(img, axis=0)
 
@@ -44,7 +44,6 @@ class YOLOV1DataLoader(tf.keras.utils.Sequence):
         label_matrix = np.zeros((self.cells, self.cells, self.classes + 5 * self.boxes))
         for label in labels:
             class_label, x, y,width,height = label
-            
             i, j = int(self.cells * y), int(self.cells * x)
             x_cell, y_cell = self.cells * x - j, self.cells * y - i
             width_cell = width * self.cells
@@ -55,7 +54,6 @@ class YOLOV1DataLoader(tf.keras.utils.Sequence):
                 box_coordinates = tf.constant(
                     [x_cell, y_cell, width_cell, height_cell]
                 )
-
                 label_matrix[i, j, 21:25] = box_coordinates
                 label_matrix[i, j, class_label] = 1
         label_matrix = tf.constant(label_matrix)
@@ -86,6 +84,11 @@ if __name__ == "__main__":
     input_folder = sys.argv[1]
     # For testing purposes. Give path to archive-folder as input to script.
     train_df = pd.read_csv(os.path.join(input_folder, "train.csv"), names=["image", "label_file"])
-    c = YOLOV1DataLoader(train_df, 16, (448,448,3), input_folder)
+    c = YOLOV1DataLoader(train_df, 1, (448,448,3), input_folder)
     images, labels = c.__getitem__(0)
-    print(images.shape, labels.shape)
+    img = images[0].numpy()
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(1,1)
+    ax.imshow(img)
+    print(img)
+    plt.savefig("debug.png")
